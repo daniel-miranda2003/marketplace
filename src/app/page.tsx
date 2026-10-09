@@ -1,69 +1,60 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { Suspense } from "react";
+import Link from "@/components/ui/Link";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Footer from "@/components/layout/Footer";
+import Navbar, { NavbarFallback } from "@/components/layout/Navbar";
+import Reveal from "@/components/ui/Reveal";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
+    <>
+      <Suspense fallback={<NavbarFallback />}>
+        <Navbar />
+      </Suspense>
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Reveal>
+          <Box sx={{ mb: 6, maxWidth: 680 }}>
+            <Typography
+              variant="overline"
+              color="text.secondary"
+              sx={{ letterSpacing: 3 }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
+              Marketplace de moda independiente
+            </Typography>
+            <Typography
+              variant="h2"
+              component="h1"
+              gutterBottom
+              sx={{ fontSize: { xs: "2rem", md: "3rem" }, mt: 1 }}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+              Moda independiente, en un solo lugar.
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+              Explora prendas de tiendas independientes, con recomendaciones
+              de IA según tu colorimetría.
+            </Typography>
+            <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+              <Button
+                variant="contained"
+                size="large"
+                component={Link}
+                href="/marketplace"
+                sx={{ minHeight: 48 }}
+              >
+                Explorar catálogo
+              </Button>
+              <Button variant="text" size="large" component={Link} href="/auth">
+                Descubrir mi paleta
+              </Button>
+            </Stack>
+          </Box>
+        </Reveal>
+      </Container>
+      <Footer />
+    </>
   );
 }
