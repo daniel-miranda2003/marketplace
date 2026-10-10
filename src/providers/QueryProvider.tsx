@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -16,6 +16,17 @@ export default function QueryProvider({ children }: { children: ReactNode }) {
         },
       }),
   );
+
+  useEffect(() => {
+    const preventImageDrag = (event: DragEvent) => {
+      if (event.target instanceof HTMLImageElement) {
+        event.preventDefault();
+      }
+    };
+    document.addEventListener("dragstart", preventImageDrag);
+    return () =>
+      document.removeEventListener("dragstart", preventImageDrag);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

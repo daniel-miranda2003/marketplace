@@ -35,7 +35,8 @@ export async function fetchProducts(
     .from("products")
     .select("*, stores ( id, name, city )", { count: "exact" })
     .eq("is_active", true)
-    .eq("is_published", true);
+    .eq("is_published", true)
+    .is("deleted_at", null);
 
   if (filters.category) {
     query = query.eq("category", filters.category);
@@ -80,22 +81,25 @@ export async function fetchStoreShowcase(
   storeId: string,
 ): Promise<StoreShowcase> {
   const supabase = createClient();
-  const [{ data: store, error: storeError }, { data: products, error: productsError }] =
-    await Promise.all([
-      supabase
-        .from("stores")
-        .select("id, name, city, description")
-        .eq("id", storeId)
-        .maybeSingle(),
-      supabase
-        .from("products")
-        .select("*, stores ( id, name, city )")
-        .eq("store_id", storeId)
-        .eq("is_active", true)
-        .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(24),
-    ]);
+  const [
+    { data: store, error: storeError },
+    { data: products, error: productsError },
+  ] = await Promise.all([
+    supabase
+      .from("stores")
+      .select("id, name, city, description")
+      .eq("id", storeId)
+      .maybeSingle(),
+    supabase
+      .from("products")
+      .select("*, stores ( id, name, city )")
+      .eq("store_id", storeId)
+      .eq("is_active", true)
+      .eq("is_published", true)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(24),
+  ]);
 
   if (storeError || productsError || !store) {
     throw new Error("No se pudo cargar la tienda.");

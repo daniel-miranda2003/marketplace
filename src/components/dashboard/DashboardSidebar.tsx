@@ -15,13 +15,11 @@ import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import BarChartIcon from "@mui/icons-material/BarChart";
 import CheckroomIcon from "@mui/icons-material/Checkroom";
-import InventoryIcon from "@mui/icons-material/Inventory";
+import DynamicFeedIcon from "@mui/icons-material/DynamicFeed";
 import MenuIcon from "@mui/icons-material/Menu";
-import StorefrontIcon from "@mui/icons-material/Storefront";
+import StoreIcon from "@mui/icons-material/Store";
 import type { Database } from "@/lib/supabase/database.types";
 import { DRAWER_WIDTH } from "./DashboardShell";
 import SidebarProfile from "./SidebarProfile";
@@ -49,24 +47,18 @@ interface DashboardSidebarProps {
 }
 
 const buyerItems: SidebarItem[] = [
-  { label: "Mi armario", href: "/dashboard", icon: <CheckroomIcon /> },
-  { label: "Tienda", href: "/marketplace", icon: <StorefrontIcon /> },
+  { label: "Mi armario", href: "/home", icon: <CheckroomIcon /> },
+  { label: "Tienda", href: "/marketplace", icon: <StoreIcon /> },
   {
     label: "Análisis IA",
-    href: "/dashboard/analysis",
+    href: "/home/analysis",
     icon: <AutoAwesomeIcon />,
   },
 ];
 
 const vendorItems: SidebarItem[] = [
-  { label: "Resumen de ventas", href: "/dashboard", icon: <BarChartIcon /> },
-  { label: "Tienda", href: "/marketplace", icon: <StorefrontIcon /> },
-  { label: "Inventario", href: "/dashboard/inventory", icon: <InventoryIcon /> },
-  {
-    label: "Mi billetera",
-    href: "/dashboard/wallet",
-    icon: <AccountBalanceWalletIcon />,
-  },
+  { label: "Publicaciones", href: "/home", icon: <DynamicFeedIcon /> },
+  { label: "Tienda", href: "/marketplace", icon: <StoreIcon /> },
 ];
 
 const COLLAPSED_WIDTH = 72;
@@ -86,6 +78,53 @@ export default function DashboardSidebar({
   const pathname = usePathname();
   const items = role === "vendor" ? vendorItems : buyerItems;
   const width = collapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH;
+
+  const renderItem = (item: SidebarItem, compact: boolean) => {
+    const button = (
+      <ListItemButton
+        component={Link}
+        href={item.href}
+        selected={pathname === item.href}
+        onClick={onClose}
+        disableRipple
+        sx={{
+          justifyContent: compact ? "center" : "flex-start",
+          borderRadius: 2.5,
+          py: 1.25,
+          color: "text.secondary",
+          "& .MuiListItemIcon-root": {
+            minWidth: compact ? 0 : 40,
+            color: "inherit",
+          },
+          "&:hover": {
+            bgcolor: "action.hover",
+          },
+          "&.Mui-selected": {
+            bgcolor: "primary.main",
+            color: "primary.contrastText",
+            fontWeight: 600,
+            "&:hover": {
+              bgcolor: "primary.dark",
+            },
+          },
+        }}
+      >
+        <ListItemIcon>{item.icon}</ListItemIcon>
+        {!compact && <ListItemText primary={item.label} />}
+      </ListItemButton>
+    );
+    return (
+      <ListItem key={item.href} disablePadding sx={{ mb: 1 }}>
+        {compact ? (
+          <Tooltip title={item.label} placement="right">
+            {button}
+          </Tooltip>
+        ) : (
+          button
+        )}
+      </ListItem>
+    );
+  };
 
   const renderContent = (compact: boolean) => (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -115,29 +154,8 @@ export default function DashboardSidebar({
         )}
       </Toolbar>
       <Divider />
-      <List>
-        {items.map((item) => (
-          <ListItem key={item.href} disablePadding>
-            <Tooltip
-              title={item.label}
-              placement="right"
-              disableHoverListener={!compact}
-            >
-              <ListItemButton
-                component={Link}
-                href={item.href}
-                selected={pathname === item.href}
-                onClick={onClose}
-                sx={{ justifyContent: compact ? "center" : "flex-start" }}
-              >
-                <ListItemIcon sx={{ minWidth: compact ? 0 : 56 }}>
-                  {item.icon}
-                </ListItemIcon>
-                {!compact && <ListItemText primary={item.label} />}
-              </ListItemButton>
-            </Tooltip>
-          </ListItem>
-        ))}
+      <List sx={{ px: 2, py: 1.5 }}>
+        {items.map((item) => renderItem(item, compact))}
       </List>
       <Box sx={{ mt: "auto" }}>
         <SidebarProfile

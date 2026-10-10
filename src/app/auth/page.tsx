@@ -5,7 +5,7 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import { Suspense } from "react";
 import AuthForm from "@/components/auth/AuthForm";
-import Footer from "@/components/layout/Footer";
+import Footer, { FooterFallback } from "@/components/layout/Footer";
 import Navbar, { NavbarFallback } from "@/components/layout/Navbar";
 
 export default function AuthPage() {
@@ -29,7 +29,9 @@ export default function AuthPage() {
           </CardContent>
         </Card>
       </Container>
-      <Footer />
+      <Suspense fallback={<FooterFallback />}>
+        <Footer />
+      </Suspense>
     </>
   );
 }

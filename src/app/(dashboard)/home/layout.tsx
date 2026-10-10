@@ -7,7 +7,7 @@ import type { Database } from "@/lib/supabase/database.types";
 
 export const instant = false;
 
-export default async function DashboardLayout({
+export default async function HomeLayout({
   children,
 }: {
   children: ReactNode;

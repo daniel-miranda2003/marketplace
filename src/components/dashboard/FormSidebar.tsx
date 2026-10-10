@@ -24,6 +24,7 @@ import Link from "../ui/Link";
 import {
   ALLOWED_IMAGE_TYPES,
   CHROMATIC_SEASONS,
+  GARMENT_GENDERS,
   MAX_IMAGES,
   type ProductFormInput,
   type ProductFormOutput,
@@ -301,6 +302,35 @@ export default function FormSidebar({
             )}
           />
           <Controller
+            name="gender"
+            control={control}
+            render={({ field }) => (
+              <FormControl
+                fullWidth
+                size="small"
+                error={Boolean(errors.gender)}
+              >
+                <InputLabel id="gender-label">Para</InputLabel>
+                <Select
+                  labelId="gender-label"
+                  label="Para"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  inputRef={field.ref}
+                >
+                  <MenuItem value="">Sin especificar</MenuItem>
+                  {GARMENT_GENDERS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>{errors.gender?.message}</FormHelperText>
+              </FormControl>
+            )}
+          />
+          <Controller
             name="isPublished"
             control={control}
             render={({ field }) => (
@@ -391,7 +421,7 @@ export default function FormSidebar({
               size="large"
               fullWidth
               component={Link}
-              href={feedback?.published ? "/marketplace" : "/dashboard"}
+              href={feedback?.published ? "/marketplace" : "/home"}
               sx={{ minHeight: 48, mt: 1 }}
             >
               {feedback?.published

@@ -60,7 +60,9 @@ export async function createProduct(
     price: Number(formData.get("price")),
     category: formData.get("category"),
     season: formData.get("season") ?? "",
+    gender: formData.get("gender") ?? "",
     isPublished: formData.get("isPublished") !== "false",
+    isSold: formData.get("isSold") === "true",
   });
 
   if (!parsed.success) {
@@ -158,6 +160,8 @@ export async function createProduct(
     image_urls: imageUrls,
     is_active: true,
     is_published: parsed.data.isPublished ?? true,
+    is_sold: parsed.data.isSold ?? false,
+    gender: parsed.data.gender === "" ? null : parsed.data.gender,
   };
 
   const { error: insertError } = await supabase
@@ -171,7 +175,7 @@ export async function createProduct(
 
   revalidatePath("/");
   revalidatePath("/marketplace");
-  revalidatePath("/dashboard");
+  revalidatePath("/home");
   if (parsed.data.isPublished === false) {
     return { ok: true, message: "Borrador guardado correctamente." };
   }
@@ -234,7 +238,9 @@ export async function updateProduct(
     price: Number(formData.get("price")),
     category: formData.get("category"),
     season: formData.get("season") ?? "",
+    gender: formData.get("gender") ?? "",
     isPublished: formData.get("isPublished") !== "false",
+    isSold: formData.get("isSold") === "true",
   });
 
   if (!parsed.success) {
@@ -336,7 +342,9 @@ export async function updateProduct(
       price: parsed.data.price,
       category: parsed.data.category as GarmentCategory,
       colorimetry_tag: parsed.data.season === "" ? null : parsed.data.season,
+      gender: parsed.data.gender === "" ? null : parsed.data.gender,
       is_published: parsed.data.isPublished ?? true,
+      is_sold: parsed.data.isSold ?? false,
       image_urls: imageUrls,
     })
     .eq("id", productId);
@@ -360,10 +368,45 @@ export async function updateProduct(
 
   revalidatePath("/");
   revalidatePath("/marketplace");
-  revalidatePath("/dashboard");
+  revalidatePath("/home");
   return { ok: true, message: "Publicación actualizada correctamente." };
 }
 
+export async function setProductSold(
+  productId: string,
+  sold: boolean,
+): Promise<{ ok: boolean; message: string }> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) {
+    return { ok: false, message: "Debes iniciar sesión." };
+  }
+
+  const storeId = await getOwnedStoreId(supabase, data.user.id);
+
+  if (!storeId) {
+    return { ok: false, message: "Crea tu tienda primero." };
+  }
+
+  const { error: updateError } = await supabase
+    .from("products")
+    .update({ is_sold: sold })
+    .eq("id", productId)
+    .eq("store_id", storeId);
+
+  if (updateError) {
+    return { ok: false, message: "No se pudo actualizar el estado." };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/marketplace");
+  revalidatePath("/home");
+  return {
+    ok: true,
+    message: sold ? "Marcada como vendida." : "Marcada como disponible.",
+  };
+}
 export async function setProductPublished(
   productId: string,
   published: boolean,
@@ -393,11 +436,87 @@ export async function setProductPublished(
 
   revalidatePath("/");
   revalidatePath("/marketplace");
-  revalidatePath("/dashboard");
+  revalidatePath("/home");
   return {
     ok: true,
     message: published
       ? "Publicación visible en el marketplace."
       : "Publicación guardada como borrador.",
   };
+}
+
+export async function deleteProduct(
+  productId: string,
+): Promise<{ ok: boolean; message: string }> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) {
+    return { ok: false, message: "Debes iniciar sesión." };
+  }
+
+  const storeId = await getOwnedStoreId(supabase, data.user.id);
+
+  if (!storeId) {
+    return { ok: false, message: "Crea tu tienda primero." };
+  }
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("store_id")
+    .eq("id", productId)
+    .maybeSingle();
+
+  if (!product || product.store_id !== storeId) {
+    return {
+      ok: false,
+      message: "No tienes permiso para eliminar esta publicación.",
+    };
+  }
+
+  const { error: deleteError } = await supabase
+    .from("products")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", productId);
+
+  if (deleteError) {
+    return { ok: false, message: "No se pudo eliminar la publicación." };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/marketplace");
+  revalidatePath("/home");
+  return { ok: true, message: "Publicación movida a la papelera." };
+}
+
+export async function restoreProduct(
+  productId: string,
+): Promise<{ ok: boolean; message: string }> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+
+  if (!data.user) {
+    return { ok: false, message: "Debes iniciar sesión." };
+  }
+
+  const storeId = await getOwnedStoreId(supabase, data.user.id);
+
+  if (!storeId) {
+    return { ok: false, message: "Crea tu tienda primero." };
+  }
+
+  const { error: restoreError } = await supabase
+    .from("products")
+    .update({ deleted_at: null })
+    .eq("id", productId)
+    .eq("store_id", storeId);
+
+  if (restoreError) {
+    return { ok: false, message: "No se pudo restaurar la publicación." };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/marketplace");
+  revalidatePath("/home");
+  return { ok: true, message: "Publicación restaurada correctamente." };
 }

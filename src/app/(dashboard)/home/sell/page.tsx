@@ -6,7 +6,7 @@ import AddProductForm from "@/components/dashboard/AddProductForm";
 
 export const instant = false;
 
-export default async function InventoryPage() {
+export default async function SellPage() {
   await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();

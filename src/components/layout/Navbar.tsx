@@ -29,7 +29,7 @@ export default async function Navbar() {
   await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  const accountHref = data.user ? "/dashboard" : "/auth";
+  const accountHref = data.user ? "/home" : "/auth";
   const categories = await getCategories();
 
   return (

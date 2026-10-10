@@ -37,7 +37,7 @@ export default function BuyerFreeView({ products }: BuyerFreeViewProps) {
             color="secondary"
             size="large"
             component={Link}
-            href="/dashboard/upgrade"
+            href="/home/upgrade"
             sx={{ minHeight: 48 }}
           >
             Desbloquear mi estilo (Premium)

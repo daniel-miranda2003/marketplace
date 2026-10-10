@@ -39,7 +39,7 @@ export default function DashboardShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
-  const isInventory = pathname === "/dashboard/inventory";
+  const isInventory = pathname === "/home/sell";
   const drawerWidth = collapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH;
 
   return (

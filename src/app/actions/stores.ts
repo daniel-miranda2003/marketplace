@@ -80,7 +80,7 @@ export async function createStore(
     return { ok: false, message: "No se pudo crear la tienda." };
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/home");
   return { ok: true, message: "Tienda creada correctamente." };
 }
 
@@ -137,6 +137,6 @@ export async function updateStore(
     return { ok: false, message: "No se pudo actualizar la tienda." };
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/home");
   return { ok: true, message: "Tienda actualizada correctamente." };
 }

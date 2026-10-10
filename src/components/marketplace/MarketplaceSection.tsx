@@ -20,6 +20,7 @@ export default async function MarketplaceSection({
     .select("category, colorimetry_tag")
     .eq("is_active", true)
     .eq("is_published", true)
+    .is("deleted_at", null)
     .limit(500);
 
   const counts: Record<string, number> = {};
@@ -35,6 +36,7 @@ export default async function MarketplaceSection({
 
   return (
     <ProductCatalog
+      key={initialCategory ?? "all"}
       categories={categories}
       counts={counts}
       seasonCounts={seasonCounts}

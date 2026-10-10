@@ -45,6 +45,7 @@ export default function AddProductForm({
       price: undefined,
       category: undefined,
       season: "",
+      gender: "",
       isPublished: true,
     },
   });
@@ -114,6 +115,7 @@ export default function AddProductForm({
     formData.append("price", String(values.price));
     formData.append("category", values.category);
     formData.append("season", values.season);
+    formData.append("gender", values.gender);
     formData.append(
       "isPublished",
       values.isPublished === false ? "false" : "true",

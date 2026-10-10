@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Database } from "@/lib/supabase/database.types";
 
 type ChromaticSeason = Database["public"]["Enums"]["chromatic_season"];
+type GarmentGender = Database["public"]["Enums"]["garment_gender"];
 
 export const MAX_IMAGES = 3;
 export const MAX_BODY_BYTES = 15 * 1024 * 1024;
@@ -21,9 +22,20 @@ export const CHROMATIC_SEASONS: { value: ChromaticSeason; label: string }[] = [
   { value: "winter", label: "Invierno" },
 ];
 
+export const GARMENT_GENDERS: { value: GarmentGender; label: string }[] = [
+  { value: "women", label: "Mujer" },
+  { value: "men", label: "Hombre" },
+  { value: "unisex", label: "Unisex" },
+];
+
 const seasonValues = CHROMATIC_SEASONS.map((option) => option.value) as [
   ChromaticSeason,
   ...ChromaticSeason[],
+];
+
+const genderValues = GARMENT_GENDERS.map((option) => option.value) as [
+  GarmentGender,
+  ...GarmentGender[],
 ];
 
 export const productSchema = z.object({
@@ -44,7 +56,9 @@ export const productSchema = z.object({
   ),
   category: z.string().min(1, "Selecciona una categoría"),
   season: z.union([z.enum(seasonValues), z.literal("")]),
+  gender: z.union([z.enum(genderValues), z.literal("")]),
   isPublished: z.boolean().optional(),
+  isSold: z.boolean().optional(),
 });
 
 export type ProductInput = z.infer<typeof productSchema>;

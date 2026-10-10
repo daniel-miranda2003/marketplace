@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import Divider from "@mui/material/Divider";
@@ -158,13 +159,25 @@ export default function ProductQuickView({
               <Typography variant="h4" component="h2" sx={{ fontWeight: 700 }}>
                 {product.name}
               </Typography>
-              <Typography
-                variant="h5"
-                color="primary.main"
-                sx={{ fontWeight: 700, mt: 1 }}
-              >
-                {formatPrice(product.price)}
-              </Typography>
+            <Typography
+              variant="h5"
+              color="primary.main"
+              sx={{ fontWeight: 700, mt: 1 }}
+            >
+              {formatPrice(product.price)}
+            </Typography>
+            {product.is_sold && (
+              <Chip
+                label="Vendido"
+                size="small"
+                sx={{
+                  mt: 1,
+                  bgcolor: "grey.900",
+                  color: "common.white",
+                  width: "fit-content",
+                }}
+              />
+            )}
               {product.stores && (
                 <Box
                   component="button"

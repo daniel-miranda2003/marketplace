@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import {
@@ -62,7 +63,7 @@ export default function AuthForm() {
         return;
       }
     }
-    router.push("/dashboard");
+    router.push("/home");
     router.refresh();
   };
 
@@ -130,9 +131,20 @@ export default function AuthForm() {
           size="large"
           fullWidth
           disabled={isSubmitting}
+          startIcon={
+            isSubmitting ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : undefined
+          }
           sx={{ minHeight: 48 }}
         >
-          {mode === "register" ? "Crear cuenta" : "Iniciar sesión"}
+          {isSubmitting
+            ? mode === "register"
+              ? "Creando cuenta..."
+              : "Iniciando sesión..."
+            : mode === "register"
+              ? "Crear cuenta"
+              : "Iniciar sesión"}
         </Button>
       </Stack>
     </Box>

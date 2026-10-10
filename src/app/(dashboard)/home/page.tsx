@@ -20,13 +20,14 @@ async function getFeaturedProducts(
     .select("*")
     .eq("is_active", true)
     .eq("is_published", true)
+    .is("deleted_at", null)
     .order("is_sponsored", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(4);
   return data ?? [];
 }
 
-export default async function DashboardPage() {
+export default async function HomePage() {
   await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
@@ -60,10 +61,13 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false })
       .limit(24);
 
+    const rows = products ?? [];
+
     return (
       <VendorDashboard
         store={store}
-        products={products ?? []}
+        products={rows.filter((product) => product.deleted_at === null)}
+        deletedProducts={rows.filter((product) => product.deleted_at !== null)}
         categories={await getCategories()}
       />
     );
@@ -72,7 +76,7 @@ export default async function DashboardPage() {
   if (profile?.subscription === "premium") {
     const { data: colorimetry } = await supabase
       .from("colorimetry_profiles")
-      .select("season, recommended_palette")
+      .select("season, recommended_palette, analysis")
       .eq("user_id", data.user.id)
       .single();
     const season = colorimetry?.season ?? null;
@@ -83,6 +87,7 @@ export default async function DashboardPage() {
         .select("*")
         .eq("is_active", true)
         .eq("is_published", true)
+        .is("deleted_at", null)
         .eq("colorimetry_tag", season)
         .limit(12);
       matches = matched ?? [];
@@ -92,6 +97,11 @@ export default async function DashboardPage() {
         season={season}
         palette={colorimetry?.recommended_palette ?? []}
         products={matches}
+        analysis={
+          colorimetry?.analysis && typeof colorimetry.analysis === "object"
+            ? (colorimetry.analysis as Record<string, unknown>)
+            : null
+        }
       />
     );
   }

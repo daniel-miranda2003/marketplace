@@ -180,11 +180,14 @@ export type Database = {
             | Database["public"]["Enums"]["chromatic_season"]
             | null;
           created_at: string;
+          deleted_at: string | null;
           description: string | null;
+          gender: Database["public"]["Enums"]["garment_gender"] | null;
           id: string;
           image_urls: string[];
           is_active: boolean;
           is_published: boolean;
+          is_sold: boolean;
           is_sponsored: boolean;
           name: string;
           price: number;
@@ -199,11 +202,14 @@ export type Database = {
             | Database["public"]["Enums"]["chromatic_season"]
             | null;
           created_at?: string;
+          deleted_at?: string | null;
           description?: string | null;
+          gender?: Database["public"]["Enums"]["garment_gender"] | null;
           id?: string;
           image_urls?: string[];
           is_active?: boolean;
           is_published?: boolean;
+          is_sold?: boolean;
           is_sponsored?: boolean;
           name: string;
           price: number;
@@ -218,11 +224,14 @@ export type Database = {
             | Database["public"]["Enums"]["chromatic_season"]
             | null;
           created_at?: string;
+          deleted_at?: string | null;
           description?: string | null;
+          gender?: Database["public"]["Enums"]["garment_gender"] | null;
           id?: string;
           image_urls?: string[];
           is_active?: boolean;
           is_published?: boolean;
+          is_sold?: boolean;
           is_sponsored?: boolean;
           name?: string;
           price?: number;
@@ -405,6 +414,7 @@ export type Database = {
         | "dresses"
         | "footwear"
         | "tops";
+      garment_gender: "men" | "women" | "unisex";
       order_status: "delivered" | "paid" | "pending_payment";
       payment_status: "approved" | "pending" | "rejected";
       settlement_status: "pending" | "settled";

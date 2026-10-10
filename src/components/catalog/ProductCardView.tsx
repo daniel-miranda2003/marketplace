@@ -2,6 +2,7 @@ import Image from "next/image";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import type { Product } from "@/lib/api/products";
 import { formatPrice } from "@/lib/format";
@@ -43,6 +44,19 @@ export default function ProductCardView({ product }: ProductCardViewProps) {
             fill
             sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 25vw"
             style={{ objectFit: "cover" }}
+          />
+        )}
+        {product.is_sold && (
+          <Chip
+            label="Vendido"
+            size="small"
+            sx={{
+              position: "absolute",
+              top: 8,
+              left: 8,
+              bgcolor: "grey.900",
+              color: "common.white",
+            }}
           />
         )}
       </Box>

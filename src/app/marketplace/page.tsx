@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import Footer from "@/components/layout/Footer";
+import Footer, { FooterFallback } from "@/components/layout/Footer";
 import MarketplaceSection from "@/components/marketplace/MarketplaceSection";
 import Navbar, { NavbarFallback } from "@/components/layout/Navbar";
 
@@ -16,7 +16,9 @@ export default function MarketplacePage({ searchParams }: MarketplacePageProps) 
         <Navbar />
       </Suspense>
       <MarketplaceSection searchParams={searchParams} />
-      <Footer />
+      <Suspense fallback={<FooterFallback />}>
+        <Footer />
+      </Suspense>
     </>
   );
 }

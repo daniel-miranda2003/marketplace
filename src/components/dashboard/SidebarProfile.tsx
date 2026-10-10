@@ -55,18 +55,22 @@ export default function SidebarProfile({
   };
 
   return (
-    <Box sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
+    <Box sx={{ px: 1, py: 0.5 }}>
       <ButtonBase
         onClick={(event) => setAnchor(event.currentTarget)}
+        disableRipple
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: compact ? "center" : "flex-start",
           gap: 1.5,
           width: "100%",
-          borderRadius: 2,
+          borderRadius: 2.5,
           p: 1,
           textAlign: "left",
+          "&:hover": {
+            bgcolor: "action.hover",
+          },
         }}
       >
         <Avatar sx={{ width: 36, height: 36 }}>{initial}</Avatar>

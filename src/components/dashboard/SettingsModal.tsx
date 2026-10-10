@@ -225,7 +225,7 @@ export default function SettingsModal({
                 <Button
                   variant="contained"
                   component={Link}
-                  href="/dashboard/upgrade"
+                  href="/home/upgrade"
                   sx={{ mt: 3, minHeight: 44 }}
                 >
                   Mejorar a Pro

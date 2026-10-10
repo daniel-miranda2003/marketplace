@@ -22,11 +22,13 @@ import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import { updateProduct } from "@/app/actions/products";
 import {
   ALLOWED_IMAGE_TYPES,
   CHROMATIC_SEASONS,
+  GARMENT_GENDERS,
   MAX_IMAGES,
   MAX_IMAGE_SIZE_BYTES,
   MAX_IMAGE_SIZE_LABEL,
@@ -52,6 +54,7 @@ export default function EditProductDialog({
 }: EditProductDialogProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const [keptUrls, setKeptUrls] = useState<string[]>(product.image_urls);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newPreviewUrls, setNewPreviewUrls] = useState<string[]>([]);
@@ -70,7 +73,9 @@ export default function EditProductDialog({
       price: product.price,
       category: product.category,
       season: product.colorimetry_tag ?? "",
+      gender: product.gender ?? "",
       isPublished: product.is_published,
+      isSold: product.is_sold,
     },
   });
 
@@ -137,9 +142,14 @@ export default function EditProductDialog({
     formData.append("price", String(values.price));
     formData.append("category", values.category);
     formData.append("season", values.season);
+    formData.append("gender", values.gender);
     formData.append(
       "isPublished",
       values.isPublished === false ? "false" : "true",
+    );
+    formData.append(
+      "isSold",
+      values.isSold === true ? "true" : "false",
     );
     formData.append("keepImages", JSON.stringify(keptUrls));
     for (const image of newFiles) {
@@ -162,12 +172,47 @@ export default function EditProductDialog({
         setError(result.message);
         return;
       }
-      onClose();
+      setSaved(true);
       router.refresh();
     } catch {
       setError("No se pudo guardar los cambios.");
     }
   };
+
+  if (saved) {
+    return (
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+        <DialogContent>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+              gap: 1.5,
+              py: 2,
+            }}
+          >
+            <CheckCircleIcon color="success" sx={{ width: 96, height: 96 }} />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              Publicación actualizada
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Los cambios ya están visibles.
+            </Typography>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={onClose}
+              sx={{ minHeight: 48, mt: 1 }}
+            >
+              Cerrar
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -393,6 +438,35 @@ export default function EditProductDialog({
             )}
           />
           <Controller
+            name="gender"
+            control={control}
+            render={({ field }) => (
+              <FormControl
+                fullWidth
+                size="small"
+                error={Boolean(errors.gender)}
+              >
+                <InputLabel id="edit-gender-label">Para</InputLabel>
+                <Select
+                  labelId="edit-gender-label"
+                  label="Para"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  inputRef={field.ref}
+                >
+                  <MenuItem value="">Sin especificar</MenuItem>
+                  {GARMENT_GENDERS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+                <FormHelperText>{errors.gender?.message}</FormHelperText>
+              </FormControl>
+            )}
+          />
+          <Controller
             name="isPublished"
             control={control}
             render={({ field }) => (
@@ -417,6 +491,35 @@ export default function EditProductDialog({
                   onChange={(event) => field.onChange(event.target.checked)}
                   onBlur={field.onBlur}
                   aria-label="Visible al público"
+                />
+              </Box>
+            )}
+          />
+          <Controller
+            name="isSold"
+            control={control}
+            render={({ field }) => (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 2,
+                }}
+              >
+                <Box>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Marcar como vendido
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Se mostrará con insignia de vendido.
+                  </Typography>
+                </Box>
+                <Switch
+                  checked={field.value ?? false}
+                  onChange={(event) => field.onChange(event.target.checked)}
+                  onBlur={field.onBlur}
+                  aria-label="Marcar como vendido"
                 />
               </Box>
             )}
