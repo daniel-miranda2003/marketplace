@@ -101,7 +101,7 @@ function CatalogSkeletons({ zoomed }: { zoomed: boolean }) {
   return (
     <Grid container spacing={3}>
       {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-        <Grid key={index} size={{ xs: 12, sm: 6, md: 4, lg: zoomed ? 4 : 3 }}>
+        <Grid key={index} size={{ xs: 6, sm: 6, md: 4, lg: zoomed ? 4 : 3 }}>
           <Card
             elevation={0}
             sx={{
@@ -400,7 +400,7 @@ export default function ProductCatalog({
                 {data.items.map((product) => (
                   <Grid
                     key={product.id}
-                    size={{ xs: 12, sm: 6, md: 4, lg: zoomed ? 4 : 3 }}
+                    size={{ xs: 6, sm: 6, md: 4, lg: zoomed ? 4 : 3 }}
                   >
                     <Box
                       onClick={() => openProduct(product)}
