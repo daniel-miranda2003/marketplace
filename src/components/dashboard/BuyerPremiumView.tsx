@@ -60,7 +60,7 @@ export default function BuyerPremiumView({
           </Typography>
           <Button
             component={NextLink}
-            href="/home/analysis"
+            href="/analysis"
             variant="contained"
             color="secondary"
             size="large"
@@ -103,7 +103,7 @@ export default function BuyerPremiumView({
               />
               <Button
                 component={NextLink}
-                href="/home/analysis"
+                href="/analysis"
                 variant="outlined"
                 size="small"
                 color="inherit"

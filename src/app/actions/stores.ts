@@ -37,23 +37,11 @@ export async function createStore(
     name: formData.get("name"),
     description: formData.get("description") ?? "",
     city: formData.get("city"),
+    phone: formData.get("phone") ?? "",
   });
 
   if (!parsed.success) {
     return { ok: false, message: "Revisa los datos del formulario." };
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
-
-  if (!profile || (profile.role !== "vendor" && profile.role !== "admin")) {
-    return {
-      ok: false,
-      message: "Necesitas una cuenta de vendedor para crear una tienda.",
-    };
   }
 
   const { data: existing } = await supabase
@@ -72,13 +60,25 @@ export async function createStore(
     slug: `${slugify(parsed.data.name)}-${data.user.id.slice(0, 8)}`,
     description: parsed.data.description || null,
     city: parsed.data.city,
+    phone: parsed.data.phone || null,
   };
 
   const { error } = await supabase.from("stores").insert(payload);
 
   if (error) {
+    if (error.code === "23505" && error.message.includes("stores_phone")) {
+      return {
+        ok: false,
+        message: "Este número de celular ya está registrado en otra tienda.",
+      };
+    }
     return { ok: false, message: "No se pudo crear la tienda." };
   }
+
+  await supabase
+    .from("profiles")
+    .update({ role: "vendor" })
+    .eq("id", data.user.id);
 
   revalidatePath("/home");
   return { ok: true, message: "Tienda creada correctamente." };
@@ -104,7 +104,9 @@ export async function updateStore(
 
   const parsed = updateStoreSchema.safeParse({
     name: formData.get("storeName"),
+    description: formData.get("storeDescription") ?? "",
     city: formData.get("storeCity"),
+    phone: formData.get("storePhone") ?? "",
   });
 
   if (!parsed.success) {
@@ -128,12 +130,41 @@ export async function updateStore(
     return { ok: false, message: "Tienda no encontrada." };
   }
 
+  const phone = parsed.data.phone === "" ? null : parsed.data.phone;
+
+  if (phone) {
+    const { data: clash } = await supabase
+      .from("stores")
+      .select("id")
+      .eq("phone", phone)
+      .neq("id", store.id)
+      .maybeSingle();
+
+    if (clash) {
+      return {
+        ok: false,
+        message: "Ese número de celular ya está registrado en otra tienda.",
+      };
+    }
+  }
+
   const { error } = await supabase
     .from("stores")
-    .update({ name: parsed.data.name, city: parsed.data.city })
+    .update({
+      name: parsed.data.name,
+      description: parsed.data.description || null,
+      city: parsed.data.city,
+      phone,
+    })
     .eq("id", store.id);
 
   if (error) {
+    if (error.code === "23505") {
+      return {
+        ok: false,
+        message: "Ese número de celular ya está registrado en otra tienda.",
+      };
+    }
     return { ok: false, message: "No se pudo actualizar la tienda." };
   }
 

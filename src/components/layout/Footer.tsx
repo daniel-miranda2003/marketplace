@@ -5,6 +5,7 @@ import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getCategories } from "@/lib/catalog/queries";
+import { createClient } from "@/lib/supabase/server";
 
 export function FooterFallback() {
   return (
@@ -22,7 +23,13 @@ export function FooterFallback() {
 }
 
 export default async function Footer() {
-  const categories = await getCategories();
+  const supabase = await createClient();
+  const [{ data: userResult }, categories] = await Promise.all([
+    supabase.auth.getUser(),
+    getCategories(),
+  ]);
+  const accountHref = userResult.user ? "/home" : "/auth";
+  const accountLabel = userResult.user ? "Mi cuenta" : "Entrar";
   return (
     <Box
       component="footer"
@@ -81,11 +88,11 @@ export default async function Footer() {
               <Typography
                 variant="body2"
                 component={Link}
-                href="/auth"
+                href={accountHref}
                 color="text.secondary"
                 sx={{ textDecoration: "none" }}
               >
-                Entrar
+                {accountLabel}
               </Typography>
             </Stack>
           </Grid>

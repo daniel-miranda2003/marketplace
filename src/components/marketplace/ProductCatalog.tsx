@@ -30,10 +30,12 @@ import ProductQuickView from "../catalog/ProductQuickView";
 import SellerProfileModal from "../catalog/SellerProfileModal";
 import FiltersPanel from "./FiltersPanel";
 import { useProducts } from "@/hooks/useProducts";
+import { useProduct } from "@/hooks/useProduct";
 import type { GarmentCategory } from "@/lib/catalog/categories";
 import type { CategoryRow } from "@/lib/catalog/queries";
 import type {
   ChromaticSeason,
+  GenderFilter,
   Product,
   ProductSort,
 } from "@/lib/api/products";
@@ -42,7 +44,11 @@ interface ProductCatalogProps {
   categories: CategoryRow[];
   counts: Record<string, number>;
   seasonCounts: Record<string, number>;
+  genderCounts: Record<GenderFilter, number>;
   initialCategory: GarmentCategory | null;
+  initialGender: GenderFilter | null;
+  initialSeason: ChromaticSeason | null;
+  initialProductId: string | null;
 }
 
 const toPrice = (value: string): number | null => {
@@ -61,14 +67,41 @@ const sortOptions: { value: ProductSort; label: string }[] = [
 
 const PAGE_SIZE = 12;
 
+function syncProductParam(
+  category: GarmentCategory | null,
+  gender: GenderFilter | null,
+  season: ChromaticSeason | null,
+  productId: string | null,
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const params = new URLSearchParams();
+  if (category) {
+    params.set("category", category);
+  }
+  if (gender) {
+    params.set("gender", gender);
+  }
+  if (season) {
+    params.set("season", season);
+  }
+  if (productId) {
+    params.set("product", productId);
+  }
+  const query = params.toString();
+  window.history.replaceState(
+    null,
+    "",
+    `${window.location.pathname}${query ? `?${query}` : ""}`,
+  );
+}
+
 function CatalogSkeletons({ zoomed }: { zoomed: boolean }) {
   return (
     <Grid container spacing={3}>
       {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-        <Grid
-          key={index}
-          size={{ xs: 12, sm: 6, md: 4, lg: zoomed ? 4 : 3 }}
-        >
+        <Grid key={index} size={{ xs: 12, sm: 6, md: 4, lg: zoomed ? 4 : 3 }}>
           <Card
             elevation={0}
             sx={{
@@ -122,12 +155,17 @@ export default function ProductCatalog({
   categories,
   counts,
   seasonCounts,
+  genderCounts,
   initialCategory,
+  initialGender,
+  initialSeason,
+  initialProductId,
 }: ProductCatalogProps) {
   const [category, setCategory] = useState<GarmentCategory | null>(
     initialCategory,
   );
-  const [season, setSeason] = useState<ChromaticSeason | null>(null);
+  const [gender, setGender] = useState<GenderFilter | null>(initialGender);
+  const [season, setSeason] = useState<ChromaticSeason | null>(initialSeason);
   const [search, setSearch] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -135,12 +173,30 @@ export default function ProductCatalog({
   const [page, setPage] = useState(1);
   const [zoomed, setZoomed] = useState(false);
   const [selected, setSelected] = useState<Product | null>(null);
+  const [deepLinkDismissed, setDeepLinkDismissed] = useState(false);
   const [sellerId, setSellerId] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const deepLink = useProduct(initialProductId);
+
+  const modalProduct =
+    selected ??
+    (initialProductId && !deepLinkDismissed ? (deepLink.data ?? null) : null);
+
+  const openProduct = (product: Product) => {
+    setSelected(product);
+    syncProductParam(category, gender, season, product.id);
+  };
+
+  const closeProduct = () => {
+    setSelected(null);
+    setDeepLinkDismissed(true);
+    syncProductParam(category, gender, season, null);
+  };
   const isMobile = useMediaQuery("(max-width:899px)");
   const deferredSearch = useDeferredValue(search);
   const hasFilters =
     category !== null ||
+    gender !== null ||
     season !== null ||
     search.trim() !== "" ||
     minPrice.trim() !== "" ||
@@ -151,6 +207,7 @@ export default function ProductCatalog({
 
   const clearFilters = () => {
     setCategory(null);
+    setGender(null);
     setSeason(null);
     setSearch("");
     setMinPrice("");
@@ -161,6 +218,7 @@ export default function ProductCatalog({
   const { data, isPending, isError } = useProducts(
     {
       category,
+      gender,
       season,
       search: deferredSearch.trim() === "" ? undefined : deferredSearch.trim(),
       minPrice: toPrice(minPrice),
@@ -186,6 +244,12 @@ export default function ProductCatalog({
       }}
       categories={categories}
       counts={counts}
+      gender={gender}
+      onGenderChange={(value) => {
+        setGender(value);
+        setPage(1);
+      }}
+      genderCounts={genderCounts}
       minPrice={minPrice}
       maxPrice={maxPrice}
       onMinPriceChange={(value) => {
@@ -210,12 +274,7 @@ export default function ProductCatalog({
   return (
     <Container maxWidth="xl" sx={{ px: { xs: 2, md: 4 }, pt: 3, pb: 6 }}>
       <Breadcrumbs sx={{ mb: 1 }}>
-        <MuiLink
-          component={Link}
-          href="/"
-          underline="hover"
-          color="inherit"
-        >
+        <MuiLink component={Link} href="/" underline="hover" color="inherit">
           Inicio
         </MuiLink>
         <Typography variant="body2" color="text.primary">
@@ -344,7 +403,7 @@ export default function ProductCatalog({
                     size={{ xs: 12, sm: 6, md: 4, lg: zoomed ? 4 : 3 }}
                   >
                     <Box
-                      onClick={() => setSelected(product)}
+                      onClick={() => openProduct(product)}
                       sx={{ cursor: "pointer", height: "100%" }}
                     >
                       <ProductCardView product={product} />
@@ -353,9 +412,7 @@ export default function ProductCatalog({
                 ))}
               </Grid>
               {totalPages > 1 && (
-                <Box
-                  sx={{ display: "flex", justifyContent: "center", mt: 4 }}
-                >
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                   <Pagination
                     count={totalPages}
                     page={page}
@@ -363,14 +420,14 @@ export default function ProductCatalog({
                   />
                 </Box>
               )}
-              {selected && (
+              {modalProduct && (
                 <ProductQuickView
-                  key={selected.id}
-                  product={selected}
-                  open={selected !== null}
-                  onClose={() => setSelected(null)}
+                  key={modalProduct.id}
+                  product={modalProduct}
+                  open={modalProduct !== null}
+                  onClose={closeProduct}
                   onSellerOpen={() => {
-                    const storeId = selected.stores?.id;
+                    const storeId = modalProduct.stores?.id;
                     if (storeId) {
                       setSellerId(storeId);
                     }

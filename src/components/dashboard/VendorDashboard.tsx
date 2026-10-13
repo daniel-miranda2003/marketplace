@@ -24,10 +24,12 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import GridViewIcon from "@mui/icons-material/GridView";
+import PhoneIcon from "@mui/icons-material/Phone";
 import PublishIcon from "@mui/icons-material/Publish";
 import RestoreIcon from "@mui/icons-material/Restore";
 import SellIcon from "@mui/icons-material/Sell";
 import UnpublishedIcon from "@mui/icons-material/Unpublished";
+import UndoIcon from "@mui/icons-material/Undo";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import Link from "../ui/Link";
 import EmptyState from "../ui/EmptyState";
@@ -48,6 +50,7 @@ interface StoreSummary {
   name: string;
   city: string | null;
   description: string | null;
+  phone: string | null;
 }
 
 type ProductRow = Tables<"products">;
@@ -75,26 +78,58 @@ function SoldChip({ sold }: { sold: boolean }) {
   if (!sold) {
     return null;
   }
-  return <Chip label="Vendido" size="small" variant="outlined" />;
+  return (
+    <Chip
+      icon={<SellIcon sx={{ fontSize: 16 }} />}
+      label="Vendido"
+      size="small"
+      color="success"
+      sx={{ fontWeight: 700 }}
+    />
+  );
 }
 
-function ProductThumbnail({ product }: { product: ProductRow }) {
+function ProductThumbnail({
+  product,
+}: {
+  product: ProductRow;
+}) {
   return (
-    <Box
-      component="img"
-      src={product.image_urls[0] ?? ""}
-      alt={product.name}
-      sx={{
-        width: 72,
-        height: 88,
-        objectFit: "cover",
-        borderRadius: 2,
-        border: 1,
-        borderColor: "divider",
-        flexShrink: 0,
-        display: "block",
-      }}
-    />
+    <Box sx={{ position: "relative", flexShrink: 0 }}>
+      <Box
+        component="img"
+        src={product.image_urls[0] ?? ""}
+        alt={product.name}
+        sx={{
+          width: 72,
+          height: 88,
+          objectFit: "cover",
+          borderRadius: 2,
+          border: 1,
+          borderColor: "divider",
+          display: "block",
+          ...(product.is_sold && {
+            opacity: 0.45,
+            filter: "grayscale(60%)",
+          }),
+        }}
+      />
+      {product.is_sold && (
+        <Chip
+          label="Vendido"
+          size="small"
+          color="success"
+          sx={{
+            position: "absolute",
+            left: 4,
+            bottom: 4,
+            height: 22,
+            fontSize: 11,
+            fontWeight: 700,
+          }}
+        />
+      )}
+    </Box>
   );
 }
 
@@ -141,11 +176,11 @@ function ProductActions({
       <Button
         size="small"
         variant="outlined"
-        startIcon={<SellIcon />}
+        startIcon={product.is_sold ? <UndoIcon /> : <SellIcon />}
         disabled={isSoldToggling}
         onClick={onToggleSold}
       >
-        {product.is_sold ? "Disponible" : "Vendido"}
+        {product.is_sold ? "Marcar disponible" : "Marcar vendido"}
       </Button>
       <Button
         size="small"
@@ -243,6 +278,14 @@ export default function VendorDashboard({
           </Typography>
           <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
             {store.city && <Chip label={store.city} size="small" />}
+            {store.phone && (
+              <Chip
+                icon={<PhoneIcon sx={{ fontSize: 16 }} />}
+                label={store.phone}
+                size="small"
+                variant="outlined"
+              />
+            )}
             <Chip
               label={`${products.length} publicaciones`}
               size="small"
@@ -268,7 +311,9 @@ export default function VendorDashboard({
         <EditStoreDialog
           storeId={store.id}
           name={store.name}
+          description={store.description}
           city={store.city}
+          phone={store.phone}
         />
       </Stack>
       <Stack

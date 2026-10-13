@@ -35,6 +35,9 @@ export default function ProductCardView({ product }: ProductCardViewProps) {
           aspectRatio: "3 / 4",
           bgcolor: "grey.100",
           overflow: "hidden",
+          ...(product.is_sold && {
+            "& img": { opacity: 0.6, filter: "grayscale(50%)" },
+          }),
         }}
       >
         {image && (

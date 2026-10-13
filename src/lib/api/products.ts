@@ -3,13 +3,16 @@ import type { Database, Tables } from "@/lib/supabase/database.types";
 import type { GarmentCategory } from "@/lib/catalog/categories";
 
 export type Product = Tables<"products"> & {
-  stores?: Pick<Tables<"stores">, "id" | "name" | "city"> | null;
+  stores?: Pick<Tables<"stores">, "id" | "name" | "city" | "phone"> | null;
 };
 export type ChromaticSeason = Database["public"]["Enums"]["chromatic_season"];
+export type GarmentGender = Database["public"]["Enums"]["garment_gender"];
+export type GenderFilter = Exclude<GarmentGender, "unisex">;
 export type ProductSort = "recent" | "price_asc" | "price_desc";
 
 export interface ProductFilters {
   category?: GarmentCategory | null;
+  gender?: GenderFilter | null;
   season?: ChromaticSeason | null;
   minPrice?: number | null;
   maxPrice?: number | null;
@@ -33,13 +36,16 @@ export async function fetchProducts(
   const to = from + PAGE_SIZE - 1;
   let query = supabase
     .from("products")
-    .select("*, stores ( id, name, city )", { count: "exact" })
+    .select("*, stores ( id, name, city, phone )", { count: "exact" })
     .eq("is_active", true)
     .eq("is_published", true)
     .is("deleted_at", null);
 
   if (filters.category) {
     query = query.eq("category", filters.category);
+  }
+  if (filters.gender) {
+    query = query.in("gender", [filters.gender, "unisex"]);
   }
   if (filters.season) {
     query = query.eq("colorimetry_tag", filters.season);
@@ -72,6 +78,24 @@ export async function fetchProducts(
   return { items: data, total: count ?? 0 };
 }
 
+export async function fetchProductById(id: string): Promise<Product> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select("*, stores ( id, name, city, phone )")
+    .eq("id", id)
+    .eq("is_active", true)
+    .eq("is_published", true)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (error || !data) {
+    throw new Error("No se pudo cargar la prenda.");
+  }
+
+  return data;
+}
+
 export interface StoreShowcase {
   store: Pick<Tables<"stores">, "id" | "name" | "city" | "description">;
   products: Product[];
@@ -92,7 +116,7 @@ export async function fetchStoreShowcase(
       .maybeSingle(),
     supabase
       .from("products")
-      .select("*, stores ( id, name, city )")
+      .select("*, stores ( id, name, city, phone )")
       .eq("store_id", storeId)
       .eq("is_active", true)
       .eq("is_published", true)

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import type { Product } from "@/lib/api/products";
 import {
   analyzeFaceColorimetry,
   type ColorimetryResult,
@@ -9,14 +10,38 @@ import {
 
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
+const MAX_MATCHES = 6;
+
+function shuffle<T>(items: T[]): T[] {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 type AllowedMimeType = (typeof ALLOWED_MIME_TYPES)[number];
+
+export interface ColorimetryAnalysis {
+  season: "spring" | "summer" | "autumn" | "winter";
+  subtype: string;
+  undertone: string;
+  contrast: string;
+  recommended_palette: string[];
+  avoid_palette: string[];
+  explanation: string;
+}
 
 export interface ColorimetryActionResult {
   success: boolean;
   error?: string;
   ok?: boolean;
   message?: string;
+  errorType?: "HIGH_DEMAND";
+  analysis?: ColorimetryAnalysis;
+  matches?: Product[];
+  gender?: "men" | "women";
 }
 
 function isAllowedMimeType(type: string): type is AllowedMimeType {
@@ -69,19 +94,44 @@ export async function submitColorimetryAnalysis(
     };
   }
 
+  const genderValue = formData.get("gender");
+  if (genderValue !== "men" && genderValue !== "women") {
+    return {
+      success: false,
+      error: "Selecciona para quién es el análisis: Hombre o Mujer.",
+      ok: false,
+      message: "Selecciona para quién es el análisis: Hombre o Mujer.",
+    };
+  }
+  const gender = genderValue;
+
   let analysis: ColorimetryResult;
   try {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    analysis = await analyzeFaceColorimetry(buffer, file.type);
+    const outcome = await analyzeFaceColorimetry(buffer, file.type);
+    if (!outcome.success) {
+      const message =
+        "Todos nuestros modelos están a máxima capacidad. Por favor, intenta de nuevo en unos segundos.";
+      return {
+        success: false,
+        errorType: outcome.errorType,
+        error: message,
+        message,
+        ok: false,
+      };
+    }
+    analysis = outcome.analysis;
   } catch (error) {
     const detail = error instanceof Error ? error.message : "Error desconocido";
     console.error("[colorimetry] AI analysis failed:", detail);
     return {
       success: false,
-      error: "No pudimos completar el análisis. Asegúrate de que la foto muestre tu rostro con buena iluminación e intenta de nuevo.",
+      error:
+        "No pudimos completar el análisis. Asegúrate de que la foto muestre tu rostro con buena iluminación e intenta de nuevo.",
       ok: false,
-      message: "No pudimos completar el análisis. Asegúrate de que la foto muestre tu rostro con buena iluminación e intenta de nuevo.",
+      message:
+        "No pudimos completar el análisis. Asegúrate de que la foto muestre tu rostro con buena iluminación e intenta de nuevo.",
     };
   }
 
@@ -114,11 +164,53 @@ export async function submitColorimetryAnalysis(
   }
 
   revalidatePath("/home");
-  revalidatePath("/home/analysis");
+  revalidatePath("/analysis");
 
+  const buildMatchQuery = (targetGender: "men" | "women" | "unisex") =>
+    supabase
+      .from("products")
+      .select("*, stores ( id, name, city )")
+      .eq("is_active", true)
+      .eq("is_published", true)
+      .eq("is_sold", false)
+      .is("deleted_at", null)
+      .eq("colorimetry_tag", analysis.season)
+      .eq("gender", targetGender)
+      .order("is_sponsored", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+  const [{ data: exactGenderRows }, { data: unisexRows }] = await Promise.all([
+    buildMatchQuery(gender),
+    buildMatchQuery("unisex"),
+  ]);
+
+  const seen = new Set<string>();
+  const pool: Product[] = [];
+  for (const row of [...(exactGenderRows ?? []), ...(unisexRows ?? [])]) {
+    if (!seen.has(row.id)) {
+      seen.add(row.id);
+      pool.push(row as Product);
+    }
+  }
+
+  const sponsored = pool.filter((product) => product.is_sponsored);
+  const regular = shuffle(pool.filter((product) => !product.is_sponsored));
+  const matches = [...sponsored, ...regular].slice(0, MAX_MATCHES);
   return {
     success: true,
     ok: true,
     message: "¡Análisis completado con éxito!",
+    analysis: {
+      season: analysis.season,
+      subtype: analysis.subtype,
+      undertone: analysis.undertone,
+      contrast: analysis.contrast,
+      recommended_palette: analysis.recommended_palette,
+      avoid_palette: analysis.avoid_palette,
+      explanation: analysis.explanation,
+    },
+    matches: (matches ?? []) as Product[],
+    gender,
   };
 }

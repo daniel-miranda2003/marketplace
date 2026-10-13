@@ -6,7 +6,6 @@ import IconButton from "@mui/material/IconButton";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import SearchIcon from "@mui/icons-material/Search";
 import { createClient } from "@/lib/supabase/server";
 import { getCategories } from "@/lib/catalog/queries";
 
@@ -76,14 +75,6 @@ export default async function Navbar() {
           ))}
         </Box>
         <Box sx={{ display: "flex", ml: { xs: "auto", md: 0 } }}>
-          <IconButton
-            component={Link}
-            href="/marketplace"
-            aria-label="Buscar"
-            color="inherit"
-          >
-            <SearchIcon />
-          </IconButton>
           <IconButton
             component={Link}
             href={accountHref}

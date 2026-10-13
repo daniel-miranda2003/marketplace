@@ -11,10 +11,12 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import { updateStore } from "@/app/actions/stores";
 import {
+  BOLIVIA_DEPARTMENTS,
   updateStoreSchema,
   type UpdateStoreInput,
 } from "@/lib/validations/store";
@@ -22,13 +24,17 @@ import {
 interface EditStoreDialogProps {
   storeId: string;
   name: string;
+  description: string | null;
   city: string | null;
+  phone: string | null;
 }
 
 export default function EditStoreDialog({
   storeId,
   name,
+  description,
   city,
+  phone,
 }: EditStoreDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -39,7 +45,12 @@ export default function EditStoreDialog({
     formState: { errors, isSubmitting },
   } = useForm<UpdateStoreInput>({
     resolver: zodResolver(updateStoreSchema),
-    defaultValues: { name, city: city ?? "" },
+    defaultValues: {
+      name,
+      description: description ?? "",
+      city: city ?? "",
+      phone: phone ?? "",
+    },
   });
 
   const onSubmit = async (values: UpdateStoreInput) => {
@@ -47,7 +58,9 @@ export default function EditStoreDialog({
     const formData = new FormData();
     formData.append("storeId", storeId);
     formData.append("storeName", values.name);
+    formData.append("storeDescription", values.description ?? "");
     formData.append("storeCity", values.city);
+    formData.append("storePhone", values.phone);
     const result = await updateStore(formData);
     if (!result.ok) {
       setFeedback(result.message);
@@ -85,11 +98,45 @@ export default function EditStoreDialog({
                 helperText={errors.name?.message}
               />
               <TextField
-                label="Ciudad"
+                label="Descripción"
                 fullWidth
+                multiline
+                rows={3}
+                placeholder="Cuenta qué vende tu tienda…"
+                {...register("description")}
+                error={Boolean(errors.description)}
+                helperText={errors.description?.message}
+              />
+              <TextField
+                label="Ciudad / Departamento"
+                select
+                fullWidth
+                defaultValue={city ?? ""}
                 {...register("city")}
                 error={Boolean(errors.city)}
                 helperText={errors.city?.message}
+              >
+                <MenuItem value="" disabled>
+                  Selecciona un departamento
+                </MenuItem>
+                {BOLIVIA_DEPARTMENTS.map((dept) => (
+                  <MenuItem key={dept} value={dept}>
+                    {dept}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                label="Celular"
+                fullWidth
+                placeholder="Ej. 71234567"
+                inputMode="numeric"
+                slotProps={{ htmlInput: { maxLength: 8 } }}
+                {...register("phone")}
+                error={Boolean(errors.phone)}
+                helperText={
+                  errors.phone?.message ??
+                  "8 dígitos, empieza con 5, 6 o 7. Único por tienda."
+                }
               />
               {feedback && <Alert severity="error">{feedback}</Alert>}
             </Stack>

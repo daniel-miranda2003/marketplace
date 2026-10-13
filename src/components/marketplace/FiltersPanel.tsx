@@ -12,8 +12,8 @@ import Typography from "@mui/material/Typography";
 import SearchIcon from "@mui/icons-material/Search";
 import type { GarmentCategory } from "@/lib/catalog/categories";
 import type { CategoryRow } from "@/lib/catalog/queries";
-import type { ChromaticSeason } from "@/lib/api/products";
-import { CHROMATIC_SEASONS } from "@/lib/validations/product";
+import type { ChromaticSeason, GenderFilter } from "@/lib/api/products";
+import { CHROMATIC_SEASONS, GARMENT_GENDERS } from "@/lib/validations/product";
 
 interface FiltersPanelProps {
   search: string;
@@ -22,6 +22,9 @@ interface FiltersPanelProps {
   onCategoryChange: (value: GarmentCategory | null) => void;
   categories: CategoryRow[];
   counts: Record<string, number>;
+  gender: GenderFilter | null;
+  onGenderChange: (value: GenderFilter | null) => void;
+  genderCounts: Record<GenderFilter, number>;
   minPrice: string;
   maxPrice: string;
   onMinPriceChange: (value: string) => void;
@@ -60,6 +63,9 @@ export default function FiltersPanel({
   onCategoryChange,
   categories,
   counts,
+  gender,
+  onGenderChange,
+  genderCounts,
   minPrice,
   maxPrice,
   onMinPriceChange,
@@ -70,6 +76,10 @@ export default function FiltersPanel({
   showClear,
   onClear,
 }: FiltersPanelProps) {
+  const genderOptions = GARMENT_GENDERS.filter(
+    (option): option is { value: GenderFilter; label: string } =>
+      option.value !== "unisex",
+  );
   return (
     <Stack spacing={3}>
       <Box>
@@ -126,6 +136,38 @@ export default function FiltersPanel({
             />
           ))}
         </Stack>
+      </Box>
+      <Divider />
+      <Box>
+        <Typography
+          variant="overline"
+          color="text.secondary"
+          sx={{ letterSpacing: 2 }}
+        >
+          Género
+        </Typography>
+        <Stack sx={{ mt: 0.5 }}>
+          {genderOptions.map((option) => (
+            <FormControlLabel
+              key={option.value}
+              control={
+                <Checkbox
+                  size="small"
+                  checked={gender === option.value}
+                  onChange={() =>
+                    onGenderChange(
+                      gender === option.value ? null : option.value,
+                    )
+                  }
+                />
+              }
+              label={`${option.label} (${genderCounts[option.value] ?? 0})`}
+            />
+          ))}
+        </Stack>
+        <Typography variant="caption" color="text.secondary">
+          Incluye prendas unisex.
+        </Typography>
       </Box>
       <Divider />
       <Box>

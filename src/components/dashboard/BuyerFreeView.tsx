@@ -29,8 +29,7 @@ export default function BuyerFreeView({ products }: BuyerFreeViewProps) {
             Desbloquea tu estilo
           </Typography>
           <Typography variant="body1" sx={{ mb: 3, opacity: 0.85 }}>
-            Obtén tu análisis cromático con IA y outfits creados para tu
-            paleta.
+            Obtén tu análisis cromático con IA y outfits creados para tu paleta.
           </Typography>
           <Button
             variant="contained"
@@ -40,7 +39,7 @@ export default function BuyerFreeView({ products }: BuyerFreeViewProps) {
             href="/home/upgrade"
             sx={{ minHeight: 48 }}
           >
-            Desbloquear mi estilo (Premium)
+            Desbloquear mi estilo
           </Button>
         </CardContent>
       </Card>

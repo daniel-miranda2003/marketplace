@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Footer, { FooterFallback } from "@/components/layout/Footer";
 import Navbar, { NavbarFallback } from "@/components/layout/Navbar";
+import ColorimetryFab from "@/components/colorimetry/ColorimetryFab";
 import HomeShowcase, {
   HomeShowcaseFallback,
 } from "@/components/home/HomeShowcase";
@@ -17,6 +18,7 @@ export default function Home() {
       <Suspense fallback={<FooterFallback />}>
         <Footer />
       </Suspense>
+      <ColorimetryFab />
     </>
   );
 }

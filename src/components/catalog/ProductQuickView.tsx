@@ -14,10 +14,12 @@ import Typography from "@mui/material/Typography";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CloseIcon from "@mui/icons-material/Close";
-import SendIcon from "@mui/icons-material/Send";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import type { Product } from "@/lib/api/products";
 import { formatPrice } from "@/lib/format";
+
+const DEFAULT_MESSAGE = "Hola. ¿Sigue estando disponible?";
 
 interface ProductQuickViewProps {
   product: Product;
@@ -33,14 +35,38 @@ export default function ProductQuickView({
   onSellerOpen,
 }: ProductQuickViewProps) {
   const [index, setIndex] = useState(0);
+  const [message, setMessage] = useState(DEFAULT_MESSAGE);
   const images = product.image_urls;
   const total = images.length;
+  const phone = product.stores?.phone?.replace(/\D/g, "") ?? "";
 
   const goTo = (next: number) => {
     if (total === 0) {
       return;
     }
     setIndex((next + total) % total);
+  };
+
+  const sendWhatsApp = () => {
+    if (!phone) {
+      return;
+    }
+    const store = product.stores;
+    const lines = [
+      message.trim() || DEFAULT_MESSAGE,
+      `Prenda: ${product.name}`,
+      `Precio: ${formatPrice(product.price)}`,
+    ];
+    if (store) {
+      lines.push(
+        `Tienda: ${store.name}${store.city ? ` · ${store.city}` : ""}`,
+      );
+    }
+    lines.push(
+      `Ver: ${window.location.origin}/marketplace?product=${product.id}`,
+    );
+    const url = `https://wa.me/591${phone}?text=${encodeURIComponent(lines.join("\n\n"))}`;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -135,8 +161,7 @@ export default function ProductQuickView({
                       width: position === index ? 20 : 8,
                       height: 8,
                       borderRadius: 999,
-                      bgcolor:
-                        position === index ? "primary.main" : "grey.300",
+                      bgcolor: position === index ? "primary.main" : "grey.300",
                       cursor: "pointer",
                       transition: "width 0.2s ease",
                     }}
@@ -159,25 +184,25 @@ export default function ProductQuickView({
               <Typography variant="h4" component="h2" sx={{ fontWeight: 700 }}>
                 {product.name}
               </Typography>
-            <Typography
-              variant="h5"
-              color="primary.main"
-              sx={{ fontWeight: 700, mt: 1 }}
-            >
-              {formatPrice(product.price)}
-            </Typography>
-            {product.is_sold && (
-              <Chip
-                label="Vendido"
-                size="small"
-                sx={{
-                  mt: 1,
-                  bgcolor: "grey.900",
-                  color: "common.white",
-                  width: "fit-content",
-                }}
-              />
-            )}
+              <Typography
+                variant="h5"
+                color="primary.main"
+                sx={{ fontWeight: 700, mt: 1 }}
+              >
+                {formatPrice(product.price)}
+              </Typography>
+              {product.is_sold && (
+                <Chip
+                  label="Vendido"
+                  size="small"
+                  color="error"
+                  sx={{
+                    mt: 1,
+                    width: "fit-content",
+                    fontWeight: 700,
+                  }}
+                />
+              )}
               {product.stores && (
                 <Box
                   component="button"
@@ -301,18 +326,38 @@ export default function ProductQuickView({
                   <TextField
                     size="small"
                     fullWidth
-                    placeholder="Hola. ¿Sigue estando disponible?"
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        sendWhatsApp();
+                      }
+                    }}
+                    placeholder={DEFAULT_MESSAGE}
                     aria-label="Mensaje al vendedor"
+                    disabled={!phone}
                   />
                   <Button
                     variant="contained"
+                    color="success"
                     size="small"
-                    startIcon={<SendIcon />}
+                    startIcon={<WhatsAppIcon />}
+                    onClick={sendWhatsApp}
+                    disabled={!phone}
                     sx={{ flexShrink: 0 }}
                   >
                     Enviar
                   </Button>
                 </Stack>
+                {!phone && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block", mt: 1 }}
+                  >
+                    Esta tienda aún no tiene WhatsApp registrado.
+                  </Typography>
+                )}
               </Box>
             )}
           </Box>

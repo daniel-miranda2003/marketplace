@@ -8,8 +8,12 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import {
   loginSchema,
   registerSchema,
@@ -19,10 +23,27 @@ import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "register";
 
+function formatAuthError(message: string): string {
+  if (message.includes("User already registered")) {
+    return "Ya existe una cuenta con este correo electrónico.";
+  }
+  if (message.includes("Password should be at least")) {
+    return "La contraseña debe tener al menos 8 caracteres.";
+  }
+  if (message.includes("Invalid login credentials")) {
+    return "Credenciales incorrectas. Verifica tu correo y contraseña.";
+  }
+  if (message.includes("Email not confirmed")) {
+    return "Tu correo electrónico aún no ha sido confirmado. Por favor revisa tu bandeja de entrada o spam.";
+  }
+  return message;
+}
+
 export default function AuthForm() {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
   const [formError, setFormError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -50,7 +71,7 @@ export default function AuthForm() {
         },
       });
       if (error) {
-        setFormError(error.message);
+        setFormError(formatAuthError(error.message));
         return;
       }
     } else {
@@ -59,7 +80,7 @@ export default function AuthForm() {
         password: values.password,
       });
       if (error) {
-        setFormError(error.message);
+        setFormError(formatAuthError(error.message));
         return;
       }
     }
@@ -115,7 +136,7 @@ export default function AuthForm() {
         />
         <TextField
           label="Contraseña"
-          type="password"
+          type={showPassword ? "text" : "password"}
           autoComplete={
             mode === "register" ? "new-password" : "current-password"
           }
@@ -123,6 +144,24 @@ export default function AuthForm() {
           {...register("password")}
           error={Boolean(errors.password)}
           helperText={errors.password?.message}
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label={
+                      showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                    }
+                    onClick={() => setShowPassword((value) => !value)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
         />
         {formError && <Alert severity="error">{formError}</Alert>}
         <Button

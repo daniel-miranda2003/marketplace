@@ -15,8 +15,6 @@ import ListItemText from "@mui/material/ListItemText";
 import Toolbar from "@mui/material/Toolbar";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import CheckroomIcon from "@mui/icons-material/Checkroom";
 import DynamicFeedIcon from "@mui/icons-material/DynamicFeed";
 import MenuIcon from "@mui/icons-material/Menu";
 import StoreIcon from "@mui/icons-material/Store";
@@ -46,17 +44,7 @@ interface DashboardSidebarProps {
   onToggle: () => void;
 }
 
-const buyerItems: SidebarItem[] = [
-  { label: "Mi armario", href: "/home", icon: <CheckroomIcon /> },
-  { label: "Tienda", href: "/marketplace", icon: <StoreIcon /> },
-  {
-    label: "Análisis IA",
-    href: "/home/analysis",
-    icon: <AutoAwesomeIcon />,
-  },
-];
-
-const vendorItems: SidebarItem[] = [
+const navigationItems: SidebarItem[] = [
   { label: "Publicaciones", href: "/home", icon: <DynamicFeedIcon /> },
   { label: "Tienda", href: "/marketplace", icon: <StoreIcon /> },
 ];
@@ -76,7 +64,7 @@ export default function DashboardSidebar({
   onToggle,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
-  const items = role === "vendor" ? vendorItems : buyerItems;
+  const items = navigationItems;
   const width = collapsed ? COLLAPSED_WIDTH : DRAWER_WIDTH;
 
   const renderItem = (item: SidebarItem, compact: boolean) => {

@@ -72,15 +72,19 @@ export function HomeShowcaseFallback() {
 export default async function HomeShowcase() {
   await connection();
   const supabase = await createClient();
-  const { data: products } = await supabase
-    .from("products")
-    .select("*, stores ( id, name, city )")
-    .eq("is_active", true)
-    .eq("is_published", true)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(6);
+  const [{ data: userResult }, { data: products }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase
+      .from("products")
+      .select("*, stores ( id, name, city, phone )")
+      .eq("is_active", true)
+      .eq("is_published", true)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(6),
+  ]);
 
+  const sellHref = userResult.user ? "/home" : "/auth";
   const rows = products ?? [];
   const heroImages = rows
     .map((product) => product.image_urls[0])
@@ -122,7 +126,11 @@ export default async function HomeShowcase() {
               Prendas únicas de tiendas independientes, publicadas todos los
               días.
             </Typography>
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+            <Stack
+              direction="row"
+              spacing={1.5}
+              sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}
+            >
               <Button
                 variant="contained"
                 size="large"
@@ -137,7 +145,7 @@ export default async function HomeShowcase() {
                 variant="text"
                 size="large"
                 component={Link}
-                href="/auth"
+                href={sellHref}
                 sx={{ minHeight: 52 }}
               >
                 Vender
